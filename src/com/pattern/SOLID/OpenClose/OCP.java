@@ -44,6 +44,66 @@ class ProductFilter {
     }
 }
 
+interface Specification<T> {
+    boolean isSatisfied(T item);
+}
+
+interface Filter<T> {
+    Stream<T> filter(List<T> items, Specification<T> specification);
+}
+
+class ColorSpecification implements Specification<Product> {
+
+    private Color color;
+
+    public ColorSpecification(Color color) {
+        this.color = color;
+    }
+
+    @Override
+    public boolean isSatisfied(Product item) {
+        return item.color == color ; // return true/false based on specification
+    }
+}
+
+
+class BetterFilter implements Filter<Product> {
+
+    @Override
+    public Stream<Product> filter(List<Product> items, Specification<Product> specification) {
+        return items.stream().filter(p->specification.isSatisfied(p));
+    }
+}
+
+
+class SizeSpecification implements Specification<Product> {
+
+    private Size size;
+
+    public SizeSpecification(Size size) {
+        this.size = size; // return true-false based on specification
+    }
+
+    @Override
+    public boolean isSatisfied(Product item) {
+        return item.size == size;
+    }
+}
+
+class AndSpecification<T> implements Specification<T> {
+
+    private Specification<T> first, second;
+
+    public AndSpecification(Specification<T> first, Specification<T> second) {
+        this.first = first;
+        this.second = second;
+    }
+
+    @Override
+    public boolean isSatisfied(T item) {
+        return  first.isSatisfied(item) && second.isSatisfied(item);
+    }
+}
 
 // here in this scenario we are violating the principal of open-close .
 // Now we will fix this using specification pattern
@@ -58,5 +118,19 @@ public class OCP {
         ProductFilter pf = new ProductFilter();
         System.out.println("Green products (old)");
         pf.filterByColor(products, Color.GREEN).forEach(p-> System.out.println(" - " + p.name + " is green "));
+
+
+        BetterFilter bf = new BetterFilter();
+        System.out.println("Green products (new)");
+        bf.filter(products, new ColorSpecification(Color.GREEN)).forEach(
+                p->System.out.println(" - " + p.name + " is green ")
+        );
+
+
+        System.out.println("Large blue items:");
+        bf.filter(products, new AndSpecification<>(
+                new ColorSpecification(Color.BLUE),
+                new SizeSpecification(Size.LARGE)
+        )).forEach(p -> System.out.println(" - " + p.name + " is large and blue"));
     }
 }
