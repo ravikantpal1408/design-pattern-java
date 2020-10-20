@@ -1,0 +1,1 @@
+com.pattern.SOLID.SingleResponsibility.Persistence@e9e54c2
